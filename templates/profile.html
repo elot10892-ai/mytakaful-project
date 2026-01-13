@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  /* Additional profile-specific styles */
+  .confirm-delete {
+    display: none;
+    margin-top: 16px;
+    padding: 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+  }
+  .confirm-delete.show {
+    display: block;
+  }
+  
+  /* Admin Action Buttons */
+  .btn-user-management {
+    background-color: #3b82f6; /* Blue for user management */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-user-management:hover {
+    background-color: #2563eb; /* Darker blue on hover */
+  }
+  
+  .btn-group-management {
+    background-color: #8b5cf6; /* Violet for group management */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-group-management:hover {
+    background-color: #7c3aed; /* Darker violet on hover */
+  }
+  
+  .btn-transaction-view {
+    background-color: #10b981; /* Green for transactions */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-transaction-view:hover {
+    background-color: #059669; /* Darker green on hover */
+  }
+  
+  .btn-platform-settings {
+    background-color: #6b7280; /* Gray for settings */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-platform-settings:hover {
+    background-color: #4b5563; /* Darker gray on hover */
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="profile-container">
+  <div class="profile-card">
+    <!-- Profile Header with Avatar -->
+    <div class="profile-header">
+      <div class="profile-avatar">
+        {{ user.name[:1]|upper }}
+      </div>
+      <div class="profile-info">
+        <h1 class="profile-name">{{ user.name }}</h1>
+        <span class="profile-role {{ user.role }}">{{ user.role|upper }}</span>
+        <br>
+        <span class="profile-status {{ 'active' if not user.is_blocked else 'blocked' }}">
+          {{ 'Actif' if not user.is_blocked else 'Bloqué' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Account Information -->
+    <h2 class="section-title">{{ t('profile.account_info') }}</h2>
+    <div class="profile-details">
+      <div class="detail-item">
+        <div class="detail-label">{{ t('profile.email') }}</div>
+        <div class="detail-value">{{ user.email }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">{{ t('profile.role') }}</div>
+        <div class="detail-value">{{ user.role|upper }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">{{ t('profile.registration_date') }}</div>
+        <div class="detail-value">{{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'N/A' }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">{{ t('profile.last_login') }}</div>
+        <div class="detail-value">{{ t('profile.today') if user.last_login else t('profile.never') }}</div>
+      </div>
+    </div>
+
+    <!-- Statistics Section -->
+    {% if user.role == 'user' %}
+    <h2 class="section-title">{{ t('profile.statistics') }}</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-icon">👥</span>
+        <span class="stat-value">{{ user.memberships|length }}</span>
+        <span class="stat-label">{{ t('profile.groups_joined') }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">💰</span>
+        <span class="stat-value">{{ total_contributions }}</span>
+        <span class="stat-label">{{ t('profile.contributions_paid') }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🆘</span>
+        <span class="stat-value">{{ user.aids_requested }}</span>
+        <span class="stat-label">{{ t('profile.aid_requests') }}</span>
+      </div>
+    </div>
+    {% else %}
+    <h2 class="section-title">{{ t('profile.admin_statistics') }}</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-icon">👥</span>
+        <span class="stat-value">{{ user_count }}</span>
+        <span class="stat-label">{{ t('profile.users') }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🧩</span>
+        <span class="stat-value">{{ group_count }}</span>
+        <span class="stat-label">{{ t('profile.managed_groups') }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🔁</span>
+        <span class="stat-value">{{ transaction_count }}</span>
+        <span class="stat-label">{{ t('profile.transactions') }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">📈</span>
+        <span class="stat-value">{{ monthly_revenue }} MAD</span>
+        <span class="stat-label">{{ t('profile.monthly_revenue') }}</span>
+      </div>
+    </div>
+
+    <!-- Admin Actions -->
+    <h2 class="section-title">{{ t('profile.admin_actions') }}</h2>
+    <div class="admin-actions">
+      <div class="admin-action-card">
+        <span class="icon">👥</span>
+        <div>{{ t('profile.manage_users') }}</div>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-user-management">{{ t('profile.access') }}</a>
+      </div>
+      <div class="admin-action-card">
+        <span class="icon">🧩</span>
+        <div>{{ t('profile.manage_groups') }}</div>
+        <a href="{{ url_for('admin_groups') }}" class="btn btn-group-management">{{ t('profile.access') }}</a>
+      </div>
+      <div class="admin-action-card">
+        <span class="icon">🔁</span>
+        <div>{{ t('profile.view_transactions') }}</div>
+        <a href="{{ url_for('admin_transactions') }}" class="btn btn-transaction-view">{{ t('profile.access') }}</a>
+      </div>
+      <div class="admin-action-card">
+        <span class="icon">⚙️</span>
+        <div>{{ t('profile.platform_settings') }}</div>
+        <a href="#" class="btn btn-platform-settings">{{ t('profile.access') }}</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Security Section -->
+    <h2 class="section-title">{{ t('profile.account_security') }}</h2>
+    <form method="post" class="security-form">
+      <label for="password">{{ t('profile.new_password') }}</label>
+      <input type="password" id="password" name="password" class="input" minlength="6" placeholder="{{ t('profile.leave_empty') }}">
+      
+      <label for="password_confirm">{{ t('profile.confirm_password') }}</label>
+      <input type="password" id="password_confirm" name="password_confirm" class="input" placeholder="{{ t('profile.confirm_new_password') }}">
+      
+      <button type="submit" class="btn btn-primary btn-form">{{ t('profile.update_button') }}</button>
+    </form>
+
+    <!-- Delete Account Section (User only) -->
+    {% if user.role == 'user' %}
+    <div class="delete-account">
+      <h2 class="section-title">{{ t('profile.danger_zone') }}</h2>
+      <button id="deleteBtn" class="btn btn-danger btn-form">{{ t('profile.delete_account') }}</button>
+      
+      <div id="confirmDelete" class="confirm-delete">
+        <p><strong>{{ t('profile.confirm_delete') }}</strong></p>
+        <p>{{ t('profile.delete_warning') }}</p>
+        <form method="post" action="{{ url_for('delete_account') }}" style="display:inline;">
+          <button type="submit" class="btn btn-danger btn-form">{{ t('profile.confirm_deletion') }}</button>
+        </form>
+        <button id="cancelDelete" class="btn btn-neutral btn-form">{{ t('profile.cancel') }}</button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Handle delete account confirmation
+  document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtn = document.getElementById('deleteBtn');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const cancelDelete = document.getElementById('cancelDelete');
+    
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function() {
+        confirmDelete.classList.add('show');
+      });
+    }
+    
+    if (cancelDelete) {
+      cancelDelete.addEventListener('click', function() {
+        confirmDelete.classList.remove('show');
+      });
+    }
+  });
+</script>
+{% endblock %}

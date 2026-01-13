@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  .detail-grid{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:900px){.detail-grid{grid-template-columns:40% 60%}}
+  .section-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}
+  .title{margin:0 0 8px;color:var(--blue)}
+  .meta{color:var(--muted)}
+  .badge{display:inline-block;margin-left:8px;background:#f59e0b;color:#1f2937;padding:2px 8px;border-radius:999px;font-size:.85rem}
+  .stat-line{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+  .list{list-style:none;margin:0;padding:0}
+  .list li{padding:6px 0;border-bottom:1px solid var(--border)}
+  .chip{display:inline-block;background:#f1f5f9;border:1px solid var(--border);border-radius:999px;padding:4px 8px;margin-right:6px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="detail-grid">
+  <div class="section-card">
+    <h2 class="title">{{ user_detail.name }}
+      {% if user_detail.role == 'admin' %}<span class="badge">admin</span>{% else %}<span class="badge">user</span>{% endif %}
+    </h2>
+    <div class="meta">Email: {{ user_detail.email }}</div>
+    <div class="meta">Statut: {% if user_detail.is_blocked %}<span class="state-badge blocked">bloqué</span>{% else %}<span class="state-badge active">actif</span>{% endif %}</div>
+    <div class="meta">Inscription: {{ user_detail.created_at.strftime('%d/%m/%Y') if user_detail.created_at else '' }}</div>
+    <div style="margin-top:10px">
+      <a href="{{ url_for('admin_users') }}" class="btn btn-neutral">← Retour</a>
+    </div>
+  </div>
+  <div class="section-card">
+    <h3>Groupes rejoints</h3>
+    <ul class="list">
+      {% for g in groups %}
+        <li><strong>{{ g.name }}</strong> <span class="chip">Cotisation: {{ g.monthly_contribution }} MAD</span></li>
+      {% else %}
+        <li>Aucun groupe</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="section-card">
+    <h3>Historique des cotisations</h3>
+    <ul class="list">
+      {% for t in cotisations %}
+        <li>{{ t.date.strftime('%d/%m/%Y %H:%M') if t.date else '' }} — {{ t.amount }} MAD — {{ t.group.name if t.group else '' }}</li>
+      {% else %}
+        <li>Aucune cotisation</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="section-card">
+    <h3>Historique des aides</h3>
+    <ul class="list">
+      {% for t in aides %}
+        <li>{{ t.date.strftime('%d/%m/%Y %H:%M') if t.date else '' }} — {{ t.amount }} MAD — {{ t.status }}{% if t.reason %} — {{ t.reason }}{% endif %}</li>
+      {% else %}
+        <li>Aucune aide</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

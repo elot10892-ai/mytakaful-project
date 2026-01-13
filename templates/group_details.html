@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  .columns{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:900px){.columns{grid-template-columns:70% 30%}}
+  .header-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}
+  .header-card .title{font-size:24px;font-weight:700;color:var(--blue)}
+  .header-card .desc{color:var(--muted);margin-top:6px}
+  .tab-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px}
+  .tab-bar{display:flex;gap:8px;margin-bottom:10px}
+  .tab-btn{background:#fff;border:1px solid var(--border);border-radius:999px;padding:8px 12px;cursor:pointer;color:var(--dark)}
+  .tab-btn.active{background:#eef2ff;border-color:#c7d2fe}
+  .hist-list{display:flex;flex-direction:column;gap:8px}
+  .hist-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px}
+  .hist-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .hist-left{display:flex;align-items:center;gap:10px}
+  .hist-title{font-weight:600;color:var(--dark)}
+  .hist-action{color:var(--muted)}
+  .hist-date{color:var(--muted);font-size:.9rem}
+  .kpi-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px}
+  .kpi-label{color:var(--muted)}
+  .kpi-value{font-size:26px;font-weight:700;color:var(--blue)}
+  .avatar{width:32px;height:32px;border-radius:999px;background:#e2e8f0;color:#334155;display:inline-flex;align-items:center;justify-content:center;font-weight:600}
+  .avatar-list{display:flex;align-items:center;gap:6px}
+  .card h3{margin:0 0 8px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="columns">
+  <section class="main">
+    <div class="header-card">
+      <div>
+        <div class="title">{{ group.name }} <span class="badge-active">{% if not group.archived %}{{ t('group_details.active') }}{% else %}{{ t('group_details.archived') }}{% endif %}</span></div>
+        <div class="desc">{{ group.description or t('common.no_description') }}</div>
+        <div class="desc">{{ t('group_details.created_by') }} {{ group.creator.name }}</div>
+      </div>
+      <div class="icon"><svg><use href="#icon-banknotes"></use></svg></div>
+    </div>
+    <div class="tab-card">
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="historique">{{ t('group_details.history') }}</button>
+        <button class="tab-btn" data-tab="membres">{{ t('group_details.members') }}</button>
+        <button class="tab-btn" data-tab="aide">{{ t('group_details.aid_requests') }}</button>
+      </div>
+      <div id="tab-historique" class="tab" style="display:block">
+        <div class="hist-list">
+          {% for transaction in transactions %}
+          <div class="hist-card">
+            <div class="hist-row">
+              <div class="hist-left">
+                <span class="avatar">{{ transaction.user.name[:1]|upper }}</span>
+                <div>
+                  <div class="hist-title">{{ transaction.user.name }}</div>
+                  <div class="hist-action">{{ t('group_details.contribution') if transaction.type=='cotisation' else t('group_details.aid') }} {{ transaction.amount }} MAD</div>
+                </div>
+              </div>
+              <div class="hist-date">{{ transaction.date.strftime('%d/%m/%Y %H:%M') if transaction.date else transaction.date }}</div>
+            </div>
+          </div>
+          {% else %}
+          <p style="color:var(--muted)">{{ t('group_details.no_transactions') }}</p>
+          {% endfor %}
+        </div>
+      </div>
+      <div id="tab-membres" class="tab" style="display:none">
+        <ul class="list">
+          {% for m in members %}
+          <li>
+            <div class="row">
+              <span class="avatar">{{ m.name[:1]|upper }}</span>
+              <span>{{ m.name }}</span>
+              <span style="color:var(--muted)">{{ t('group_details.member_since') }} {{ m.created_at.strftime('%d/%m/%Y') if m.created_at else '' }}</span>
+            </div>
+          </li>
+          {% else %}
+          <li>{{ t('group_details.no_members') }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div id="tab-aide" class="tab" style="display:none">
+        <h3>{{ t('group_details.my_aid_requests') }}</h3>
+        <div class="hist-list" style="margin-bottom:20px">
+          {% for aid in user_aids %}
+          <div class="hist-card">
+            <div class="hist-row">
+              <div class="hist-left">
+                <div>
+                  <div class="hist-title">{{ t('group_details.request_for') }} {{ aid.amount }} MAD</div>
+                  <div class="hist-action">{{ aid.reason or t('group_details.no_reason_specified') }}</div>
+                </div>
+              </div>
+              <div>
+                <div class="hist-date">{{ aid.date.strftime('%d/%m/%Y %H:%M') }}</div>
+                <div class="hist-date">
+                  <span class="status-badge {{ aid.status }}">{{ t('aids.' + aid.status) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <p style="color:var(--muted)">{{ t('group_details.no_aid_requests') }}</p>
+          {% endfor %}
+        </div>
+        
+        <div class="form-aid">
+          <p style="color:var(--muted)">{{ t('group_details.aid_explanation') }}</p>
+          <form method="post" action="{{ url_for('request_aid', id=group.id) }}" class="form">
+            <label>{{ t('group_details.requested_amount') }}</label>
+            <input type="number" name="amount" min="1" class="input" required>
+            <label>{{ t('group_details.aid_reason') }}</label>
+            <textarea name="reason" rows="3" class="input" placeholder="{{ t('group_details.explain_situation') }}"></textarea>
+            <button type="submit" class="btn btn-primary btn-large" style="margin-top:12px">{{ t('group_details.send_request') }}</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+  <aside class="sidebar">
+    <div class="kpi-card">
+      <div class="kpi-label">{{ t('group_details.group_balance') }}</div>
+      <div class="kpi-value">{{ balance }} MAD</div>
+    </div>
+    <div class="card">
+      <h3>{{ t('group_details.members') }}</h3>
+      <div class="avatar-list">
+        {% for m in members[:6] %}
+          <span class="avatar" title="{{ m.name }}">{{ m.name[:1]|upper }}</span>
+        {% endfor %}
+        {% if members|length > 6 %}
+          <span class="badge">+{{ members|length - 6 }}</span>
+        {% endif %}
+      </div>
+      <button class="btn btn-secondary btn-large" onclick="openTab('membres')" style="margin-top:10px">{{ t('group_details.see_all') }}</button>
+    </div>
+    <div class="card">
+      <h3>{{ t('group_details.quick_actions') }}</h3>
+      <div class="actions">
+        <a class="btn btn-primary btn-large" href="{{ url_for('paiement', group_id=group.id) }}">{{ t('group_details.pay_my_contribution') }}</a>
+        <button class="btn btn-primary btn-large" onclick="openTab('aide')">{{ t('group_details.request_aid') }}</button>
+      </div>
+    </div>
+  </aside>
+</div>
+<script>
+  function openTab(k){
+    document.querySelectorAll('.tab').forEach(t=>t.style.display='none');
+    document.getElementById('tab-'+k).style.display='block';
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.getAttribute('data-tab')===k));
+  }
+  document.querySelectorAll('.tab-btn').forEach(b=>{ b.addEventListener('click', function(){ openTab(this.getAttribute('data-tab')); }); });
+</script>
+{% endblock %}

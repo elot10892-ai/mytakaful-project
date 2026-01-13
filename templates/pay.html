@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid">
+  <div class="card">
+    <h2>Paiement de la cotisation</h2>
+    <p>Montant: 10 MAD / mois</p>
+    <form method="post" class="form">
+      <label>Groupe</label>
+      <select name="group_id" class="input" required>
+        {% for g in groups %}
+          <option value="{{ g.id }}" {% if selected_group and selected_group.id == g.id %}selected{% endif %}>{{ g.name }} (solde: {{ balances[g.id] if balances and balances[g.id] is defined else 0 }})</option>
+        {% endfor %}
+      </select>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button type="submit" name="provider" value="internal" class="btn btn-primary">Payer maintenant</button>
+        {% if stripe_public_key %}
+        <button type="submit" name="provider" value="stripe" class="btn btn-secondary">Payer via Stripe</button>
+        {% endif %}
+      </div>
+    </form>
+    {% if paypal_client_id %}
+    <div style="margin-top:12px">
+      <label>Payer via PayPal</label>
+      <div id="paypal-button-container"></div>
+    </div>
+    <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD"></script>
+    <script>
+      const gidSel = document.querySelector('select[name="group_id"]');
+      function renderPaypal(){
+        const gid = gidSel.value;
+        document.getElementById('paypal-button-container').innerHTML = '';
+        paypal.Buttons({
+          createOrder: function(){ return fetch('{{ url_for('paypal_create_order', group_id='') }}'+gid, {method:'POST'}).then(r=>r.json()).then(d=>d.id) },
+          onApprove: function(data){ return fetch('{{ url_for('paypal_capture', order_id='') }}'+data.orderID).then(()=>{ window.location='{{ url_for('dashboard') }}' }) }
+        }).render('#paypal-button-container');
+      }
+      gidSel.addEventListener('change', renderPaypal);
+      renderPaypal();
+    </script>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

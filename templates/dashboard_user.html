@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+
+  
+
+  
+  .summary-item .label {
+    color: #000000 !important;
+    opacity: 1 !important;
+  }
+  
+  .summary-item .icon {
+    color: #000000 !important;
+    opacity: 1 !important;
+  }
+  
+  .summary-item .value {
+    color: #000000 !important;
+    opacity: 1 !important;
+  }
+  
+  .group-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  
+  .group-info {
+    flex: 1;
+    min-width: 150px;
+  }
+  
+  .group-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  
+  @media (max-width: 768px) {
+    .group-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .group-actions {
+      justify-content: center;
+      margin-top: 10px;
+    }
+  }
+  
+  /* Reduce space between title and fund list */
+  .card > h3 {
+    margin: 0 0 4px 0;
+  }
+  
+  .chart-wrap {
+    margin: 0 !important;
+    padding: 0;
+    min-height: auto;
+    height: 120px; /* Reduced height for compact display */
+  }
+  
+  canvas#groupFundsChart {
+    max-height: 100px !important;
+    height: 100px !important;
+  }
+  
+  /* Compact card styling */
+  .card {
+    padding: 8px !important;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .card > h3 {
+    margin: 0 0 4px 0;
+    padding: 0 0 2px 0;
+  }
+  
+  /* Specific optimization for "Fonds par groupe" section */
+  .funds-by-group-card {
+    padding: 6px !important;
+    gap: 2px;
+  }
+  
+  .funds-by-group-card .chart-wrap {
+    height: 60px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .funds-by-group-card .groups-vertical-list {
+    margin-top: 2px;
+  }
+  
+  .funds-cards {
+    display: none; /* Remove old class */
+  }
+  
+  .fund-card {
+    margin-bottom: 6px;
+  }
+  
+  .fund-card:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Vertical list styles for groups */
+  .groups-vertical-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Reduced gap for more compact spacing */
+    margin-top: 2px; /* Minimal top margin */
+  }
+  
+  .group-item-card {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    transition: all 0.2s ease;
+  }
+  
+  .group-item-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+  
+  .group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .group-name {
+    font-weight: 600;
+    color: var(--dark);
+  }
+  
+  .group-fund {
+    font-weight: 700;
+    color: var(--blue);
+    background: rgba(30, 58, 138, 0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  
+  /* Modern button colors for group actions */
+  .btn-secondary {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+    border-radius: 10px;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #60a5fa !important;
+    border-color: #60a5fa !important;
+  }
+  
+  .btn-success {
+    background-color: #16a34a !important;
+    border-color: #16a34a !important;
+    color: white !important;
+    border-radius: 10px;
+  }
+  
+  .btn-success:hover {
+    background-color: #4ade80 !important;
+    border-color: #4ade80 !important;
+  }
+  
+  .btn-primary {
+    background-color: #f97316 !important;
+    border-color: #f97316 !important;
+    color: white !important;
+    border-radius: 10px;
+  }
+  
+  .btn-primary:hover {
+    background-color: #fb923c !important;
+    border-color: #fb923c !important;
+  }
+  
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="grid" id="overview">
+  <div class="card metric gradient-blue">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div><span class="icon"><svg><use href="#icon-banknotes"></use></svg></span><span>Mon solde</span></div>
+      <div>{{ total_balance }} MAD</div>
+    </div>
+  </div>
+  <div class="card metric gradient-green">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div><span class="icon"><svg><use href="#icon-calendar"></use></svg></span><span>Cotisation mensuelle</span></div>
+      <div>{{ total_monthly_due }} MAD</div>
+    </div>
+  </div>
+  <div class="card metric gradient-purple">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div><span class="icon"><svg><use href="#icon-gift"></use></svg></span><span>Aides reçues</span></div>
+      <div>{{ aids_received }} MAD</div>
+    </div>
+  </div>
+  <div class="card metric gradient-orange">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div><span class="icon"><svg><use href="#icon-clock"></use></svg></span><span>Prochaine échéance</span></div>
+      <div>Ce mois</div>
+    </div>
+  </div>
+  
+  <div class="card funds-by-group-card">
+    <h3 class="mb-2">Fonds par groupe</h3>
+    <div class="chart-wrap" style="margin-top:0"><canvas id="groupFundsChart"></canvas></div>
+    <div class="groups-vertical-list">
+      {% for gf in group_funds %}
+        <div class="group-item-card">
+          <div class="group-item">
+            <span class="group-name">{{ gf.name }}</span>
+            <span class="group-fund">{{ gf.fund }} MAD</span>
+          </div>
+        </div>
+      {% else %}
+        <div class="group-item-card"><span class="group-name">Aucun groupe</span><span class="group-fund">—</span></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card" id="groups">
+    <h3>Groupes disponibles</h3>
+    <ul class="list">
+      {% for g in available_groups %}
+        <li>
+          <div class="row">
+            <span>{{ g.name }}</span>
+            <span>Cotisation: {{ g.monthly_contribution }} MAD</span>
+            <form method="post" action="{{ url_for('join_group', id=g.id) }}">
+              <button type="submit" class="btn btn-primary">Rejoindre un groupe</button>
+            </form>
+          </div>
+        </li>
+      {% else %}
+        <li>Aucun groupe disponible</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="card" id="payments">
+    <h3>Mes groupes</h3>
+    <ul class="list">
+      {% for g in joined_groups %}
+        <li>
+          <div class="group-row">
+            <div class="group-info">
+              <a href="{{ url_for('group_details', id=g.id) }}" class="group-name">{{ g.name }}</a>
+              <span class="group-balance">Solde: {{ balances[g.id] }} MAD</span>
+            </div>
+            <div class="group-actions">
+              <a class="btn btn-success" href="{{ url_for('paiement', group_id=g.id) }}"><span class="icon"><svg><use href="#icon-credit-card"></use></svg></span>Payer maintenant</a>
+              <a class="btn btn-secondary" href="{{ url_for('group_details', id=g.id) }}"><span class="icon"><svg><use href="#icon-eye"></use></svg></span>Voir détails</a>
+              <form method="post" action="{{ url_for('leave_group', id=g.id) }}" style="display: inline-block; margin: 0;">
+                <button type="submit" class="btn btn-danger"><span class="icon"><svg><use href="#icon-arrow-left"></use></svg></span>Quitter le groupe</button>
+              </form>
+            </div>
+          </div>
+        </li>
+      {% else %}
+        <li>Aucun groupe</li>
+      {% endfor %}
+    </ul>
+  </div>
+  
+  <div class="card" id="notifications">
+    <h3>Notifications</h3>
+    <div class="notif-list" role="list">
+      {% for n in notifications %}
+        <div class="notif-item" role="listitem">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div style="display:flex;align-items:center;gap:10px">
+              {% set ico = '🔔' %}
+              {% if n.type == 'contribution_due' %}{% set ico = '⚠️' %}
+              {% elif n.type == 'contribution_paid' %}{% set ico = '✅' %}
+              {% elif n.type in ['tx_approved', 'aid_approved'] %}{% set ico = '💰' %}
+              {% elif n.type == 'group_join' %}{% set ico = '👤' %}
+              {% elif n.type == 'group_created' %}{% set ico = '🆕' %}
+              {% elif n.type == 'aid_request' %}{% set ico = '🆘' %}
+              {% elif n.type == 'group_leave' %}{% set ico = '↩️' %}
+              {% endif %}
+              <span class="n-badge">{{ ico }}</span>
+              <div class="notif-content">
+                <div class="message">{{ n.message }}</div>
+                <div class="meta">{{ n.date.strftime('%Y-%m-%d %H:%M') }}</div>
+              </div>
+            </div>
+            {% if n.group %}
+              <span class="group-tag">{{ n.group.name }}</span>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="notif-item"><div class="message">Aucune notification</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const groupLabels = {{ joined_groups|map(attribute='name')|list|tojson }};
+  const groupValues = {{ joined_groups|map(attribute='id')|list|map('attr', balances)|list|tojson if false }};
+  const gv = {{ balances|tojson }};
+  const gnames = {{ joined_groups|map(attribute='name')|list|tojson }};
+  const gids = {{ joined_groups|map(attribute='id')|list|tojson }};
+  const vals = gids.map(id => gv[id]||0);
+  new Chart(document.getElementById('groupFundsChart'), {type:'bar', data:{labels:gnames, datasets:[{label:'Fonds par groupe (MAD)', data:vals, backgroundColor:'rgba(30,58,138,0.6)'}]}});
+
+</script>
+{% endblock %}

@@ -1,0 +1,620 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  .admin-groups-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .admin-groups-header h2 {
+    margin: 0;
+  }
+  
+  .bulk-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .bulk-actions select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+  }
+  
+  .bulk-actions .btn {
+    margin-top: 0;
+  }
+  
+  .groups-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  
+  .groups-table th {
+    background: #f8fafc;
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .groups-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .groups-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .groups-table tr:hover td {
+    background: #f8fafc;
+  }
+  
+  .checkbox-cell {
+    width: 40px;
+    text-align: center;
+  }
+  
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .status-badge.active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+  }
+  
+  .status-badge.archived {
+    background: rgba(220, 38, 38, 0.15);
+    color: #dc2626;
+  }
+  
+  .action-menu {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .action-menu-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: var(--muted);
+    border-radius: 4px;
+  }
+  
+  .action-menu-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--dark);
+  }
+  
+  .action-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 160px;
+    z-index: 100;
+    display: none;
+  }
+  
+  .action-dropdown.show {
+    display: block;
+  }
+  
+  .action-dropdown a, 
+  .action-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: var(--dark);
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .action-dropdown a:hover,
+  .action-dropdown button:hover {
+    background: #f1f5f9;
+  }
+  
+  .action-dropdown .danger {
+    color: #dc2626;
+  }
+  
+  .action-dropdown .danger:hover {
+    background: rgba(220, 38, 38, 0.1);
+  }
+  
+  .dark-mode .groups-table th {
+    background: #1e293b;
+  }
+  
+  .dark-mode .groups-table tr:hover td {
+    background: #1e293b;
+  }
+  
+  .dark-mode .action-dropdown {
+    background: #1e293b;
+    border-color: var(--border);
+  }
+  
+  .dark-mode .action-dropdown a:hover,
+  .dark-mode .action-dropdown button:hover {
+    background: #334155;
+  }
+  
+  .dark-mode .action-dropdown .danger:hover {
+    background: rgba(220, 38, 38, 0.15);
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  
+  .empty-state p {
+    margin: 8px 0 0;
+  }
+  
+  .group-name {
+    font-weight: 600;
+    color: var(--dark);
+  }
+  
+  .group-description {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  
+  .member-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .member-count svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  @media (max-width: 768px) {
+    .groups-table {
+      font-size: 14px;
+    }
+    
+    .groups-table th,
+    .groups-table td {
+      padding: 10px 8px;
+    }
+    
+    .admin-groups-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .bulk-actions {
+      flex-wrap: wrap;
+    }
+    
+    .group-description {
+      display: none;
+    }
+  }
+  
+  /* Admin Page Buttons Light/See-Through Style */
+  .btn-see-through {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-see-through::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-see-through:hover::before {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  .btn-admin {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-admin::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(59, 130, 246, 0.2); /* light blue */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-admin:hover::before {
+    background-color: rgba(37, 99, 235, 0.3); /* darker blue */
+  }
+  
+  .btn-success {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-success::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(16, 185, 129, 0.2); /* light green */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-success:hover::before {
+    background-color: rgba(5, 150, 105, 0.3); /* darker green */
+  }
+  
+  .btn-warning {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-warning::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(245, 158, 11, 0.2); /* light orange */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-warning:hover::before {
+    background-color: rgba(217, 119, 6, 0.3); /* darker orange */
+  }
+  
+  .btn-danger {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-danger::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(239, 68, 68, 0.2); /* light red */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-danger:hover::before {
+    background-color: rgba(220, 38, 38, 0.3); /* darker red */
+  }
+  
+  .btn-primary {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(37, 99, 235, 0.2); /* light blue */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-primary:hover::before {
+    background-color: rgba(29, 78, 216, 0.3); /* darker blue */
+  }
+  
+  .btn-secondary {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(75, 85, 99, 0.2); /* light gray */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-secondary:hover::before {
+    background-color: rgba(55, 65, 81, 0.3); /* darker gray */
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="grid">
+  <div class="card">
+    <h2>{{ t('admin.groups.create_title') }}</h2>
+    <form method="post" class="form">
+      <label>{{ t('admin.groups.name') }}</label>
+      <input type="text" name="name" class="input" placeholder="{{ t('admin.groups.name_placeholder') }}" required>
+      <label>{{ t('admin.groups.description') }} ({{ t('common.optional') }})</label>
+      <textarea name="description" class="input" placeholder="{{ t('admin.groups.description_placeholder') }}"></textarea>
+      <div style="color:var(--muted);margin-top:8px">{{ t('admin.groups.monthly_contribution') }}: <strong>10 MAD</strong> ({{ t('common.fixed') }})</div>
+      <button type="submit" class="btn btn-primary btn-form">{{ t('admin.groups.create_button') }}</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="admin-groups-header">
+      <h2>{{ t('admin.groups.manage_title') }}</h2>
+      <div class="bulk-actions">
+        <select id="bulkActionSelect">
+          <option value="">{{ t('admin.groups.select_action') }}</option>
+          <option value="activate">{{ t('admin.groups.activate_selected') }}</option>
+          <option value="suspend">{{ t('admin.groups.suspend_selected') }}</option>
+          <option value="delete">{{ t('admin.groups.delete_selected') }}</option>
+        </select>
+        <button id="bulkActionButton" class="btn btn-admin" disabled>{{ t('admin.groups.apply') }}</button>
+      </div>
+    </div>
+    
+    <form id="bulkActionForm" method="post" action="{{ url_for('bulk_group_action') }}">
+      <input type="hidden" name="action" id="bulkActionInput">
+      <table class="groups-table">
+        <thead>
+          <tr>
+            <th class="checkbox-cell">
+              <input type="checkbox" id="selectAllCheckbox">
+            </th>
+            <th>{{ t('admin.groups.table.name') }}</th>
+            <th>{{ t('admin.groups.table.description') }}</th>
+            <th>{{ t('admin.groups.table.creator') }}</th>
+            <th>{{ t('admin.groups.table.members') }}</th>
+            <th>{{ t('admin.groups.table.funds') }}</th>
+            <th>{{ t('admin.groups.table.status') }}</th>
+            <th>{{ t('admin.groups.table.created_at') }}</th>
+            <th>{{ t('admin.groups.table.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for group in groups %}
+          <tr>
+            <td class="checkbox-cell">
+              <input type="checkbox" name="group_ids" value="{{ group.id }}" class="group-checkbox">
+            </td>
+            <td>
+              <div class="group-name">{{ group.name }}</div>
+            </td>
+            <td>
+              <div class="group-description">{{ group.description or t('common.no_description') }}</div>
+            </td>
+            <td>{{ group.creator.name }}</td>
+            <td>
+              <div class="member-count">
+                <svg><use href="#icon-users"></use></svg>
+                {{ group.memberships|length }}
+              </div>
+            </td>
+            <td>{{ funds[group.id] }} MAD</td>
+            <td>
+              <span class="status-badge {{ 'active' if not group.archived else 'archived' }}">
+                {{ t('admin.groups.status.active') if not group.archived else t('admin.groups.status.archived') }}
+              </span>
+            </td>
+            <td>{{ group.created_at.strftime('%d/%m/%Y') if group.created_at else '' }}</td>
+            <td>
+              <div class="action-menu">
+                <button class="action-menu-btn" type="button">⋮</button>
+                <div class="action-dropdown">
+                  <a href="{{ url_for('group_details', id=group.id) }}">
+                    <svg style="width:16px;height:16px;margin-right:8px"><use href="#icon-eye"></use></svg>
+                    {{ t('admin.groups.actions.view') }}
+                  </a>
+                  {% if group.archived %}
+                  <form method="post" action="{{ url_for('activate_group', id=group.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-success">
+                      <svg style="width:16px;height:16px;margin-right:8px"><use href="#icon-check-circle"></use></svg>
+                      {{ t('admin.groups.actions.activate') }}
+                    </button>
+                  </form>
+                  {% else %}
+                  <form method="post" action="{{ url_for('suspend_group', id=group.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-warning">
+                      <svg style="width:16px;height:16px;margin-right:8px"><use href="#icon-pause"></use></svg>
+                      {{ t('admin.groups.actions.suspend') }}
+                    </button>
+                  </form>
+                  {% endif %}
+                  <form method="post" action="{{ url_for('delete_group', id=group.id) }}" style="display:inline;" onsubmit="return confirm('{{ t('admin.groups.confirm_delete') }}')">
+                    <button type="submit" class="btn btn-danger">
+                      <svg style="width:16px;height:16px;margin-right:8px"><use href="#icon-trash"></use></svg>
+                      {{ t('admin.groups.actions.delete') }}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9" class="empty-state">
+              <div>{{ t('admin.groups.no_groups') }}</div>
+              <p>{{ t('admin.groups.create_first') }}</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Action menu dropdown functionality
+  document.querySelectorAll('.action-menu-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const dropdown = this.nextElementSibling;
+      dropdown.classList.toggle('show');
+    });
+  });
+  
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.action-menu')) {
+      document.querySelectorAll('.action-dropdown').forEach(dropdown => {
+        dropdown.classList.remove('show');
+      });
+    }
+  });
+  
+  // Select all checkbox functionality
+  document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.group-checkbox');
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = this.checked;
+    });
+    updateBulkActionButton();
+  });
+  
+  // Individual checkbox change
+  document.querySelectorAll('.group-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateBulkActionButton);
+  });
+  
+  // Bulk action button functionality
+  function updateBulkActionButton() {
+    const checkedBoxes = document.querySelectorAll('.group-checkbox:checked');
+    document.getElementById('bulkActionButton').disabled = checkedBoxes.length === 0;
+  }
+  
+  // Bulk action submission
+  document.getElementById('bulkActionButton').addEventListener('click', function() {
+    const action = document.getElementById('bulkActionSelect').value;
+    if (!action) {
+      alert('{{ t('admin.groups.select_action_first') }}');
+      return;
+    }
+    
+    const checkedBoxes = document.querySelectorAll('.group-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+      alert('{{ t('admin.groups.select_groups_first') }}');
+      return;
+    }
+    
+    if (action === 'delete' && !confirm('{{ t('admin.groups.confirm_bulk_delete') }}')) {
+      return;
+    }
+    
+    document.getElementById('bulkActionInput').value = action;
+    document.getElementById('bulkActionForm').submit();
+  });
+  
+  // Update bulk button when selection changes
+  document.querySelectorAll('.group-checkbox, #selectAllCheckbox').forEach(el => {
+    el.addEventListener('change', updateBulkActionButton);
+  });
+</script>
+{% endblock %}

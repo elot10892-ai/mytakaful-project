@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  .sections{display:grid;grid-template-columns:1fr;gap:12px}
+  .card h2{margin:0 0 8px;color:var(--blue)}
+  .groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .group-card{background:rgba(255, 255, 255, 0.8);backdrop-filter:blur(10px);border:1px solid rgba(209, 213, 219, 0.5);border-radius:12px;box-shadow:0 2px 8px rgba(0, 0, 0, 0.05);padding:12px;display:flex;flex-direction:column;gap:8px;transition:transform .15s ease, box-shadow .15s ease}
+  .group-card:hover{box-shadow:0 6px 16px rgba(0, 0, 0, 0.1);transform:translateY(-2px);border-color:rgba(156, 163, 175, 0.5)}
+  .group-title{font-weight:700;color:var(--dark);font-size:18px}
+  .group-desc{color:var(--muted);font-size:14px}
+  .group-meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted)}
+  .group-meta .chip{background:#f1f5f9;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:.9rem;color:#334155}
+  .group-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .form-wrap{max-width:680px;margin:0 auto}
+  .mygroups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .balance{font-weight:700;color:var(--blue)}
+  @media(max-width:640px){.card{padding:12px}}
+  
+  /* Light see-through buttons */
+  .btn-light {
+    background-color: rgba(37, 99, 235, 0.15);
+    color: #1d4ed8;
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-light:hover {
+    background-color: rgba(29, 78, 216, 0.25);
+    border-color: rgba(29, 78, 216, 0.5);
+  }
+  
+  .btn-light-secondary {
+    background-color: rgba(107, 114, 128, 0.15);
+    color: #4b5563;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-light-secondary:hover {
+    background-color: rgba(75, 85, 99, 0.25);
+    border-color: rgba(75, 85, 99, 0.5);
+  }
+  
+  .btn-light-primary {
+    background-color: rgba(22, 163, 74, 0.15);
+    color: #16a34a;
+    border: 1px solid rgba(22, 163, 74, 0.3);
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-light-primary:hover {
+    background-color: rgba(22, 163, 74, 0.25);
+    border-color: rgba(22, 163, 74, 0.5);
+  }
+  
+  .btn-light-admin {
+    background-color: rgba(22, 163, 74, 0.15);
+    color: #16a34a;
+    border: 1px solid rgba(22, 163, 74, 0.3);
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-light-admin:hover {
+    background-color: rgba(22, 163, 74, 0.25);
+    border-color: rgba(22, 163, 74, 0.5);
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="sections">
+  <div class="card">
+    <h2>{{ t('groups.available_groups') }}</h2>
+    <div class="groups-grid">
+      {% for g in all_groups %}
+        <div class="group-card">
+          <div class="group-title">{{ g.name }}</div>
+          <div class="group-desc">{{ g.description or t('common.no_description') }}</div>
+          <div class="group-meta">
+            <span class="chip">{{ t('groups.contribution') }}: {{ g.monthly_contribution or 10 }} MAD</span>
+            <span class="chip">{{ t('groups.funds') }}: {{ funds[g.id] }} MAD</span>
+          </div>
+          <div class="group-actions">
+            <a class="btn btn-light-secondary" href="{{ url_for('group_details', id=g.id) }}">{{ t('groups.consult') }}</a>
+            {% if g.id not in membership_ids %}
+              <form method="post" action="{{ url_for('join_group', id=g.id) }}" style="display:inline">
+                <button type="submit" class="btn btn-light-primary">{{ t('groups.join_group') }}</button>
+              </form>
+            {% else %}
+              <a class="btn btn-light-primary" href="{{ url_for('paiement', group_id=g.id) }}">{{ t('groups.pay_contribution') }}</a>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="group-card"><div class="group-title">{{ t('groups.no_groups') }}</div><div class="group-desc">{{ t('groups.create_below') }}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h2>{{ t('groups.create_group') }}</h2>
+    <div class="form-wrap">
+      <form method="post" action="{{ url_for('create_group') }}" class="form">
+        <label>{{ t('groups.group_name') }}</label>
+        <input type="text" name="name" class="input" required>
+        <label>{{ t('groups.description') }}</label>
+        <textarea name="description" class="input"></textarea>
+        <div class="group-desc" style="margin-top:6px;margin-bottom:12px">{{ t('groups.monthly_contribution') }}</div>
+        <button type="submit" class="btn btn-light-primary btn-large">{{ t('groups.create_button') }}</button>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <h2>{{ t('groups.my_groups') }}</h2>
+    <div class="mygroups-grid">
+      {% for g in all_groups if g.id in membership_ids %}
+        <div class="group-card">
+          <div class="group-title">{{ g.name }}</div>
+          <div class="group-meta"><span class="chip">{{ t('groups.balance') }}: <span class="balance">{{ funds[g.id] }} MAD</span></span></div>
+          <div class="group-actions">
+            <a class="btn btn-light-secondary" href="{{ url_for('group_details', id=g.id) }}">{{ t('groups.consult') }}</a>
+            <a class="btn btn-light-admin" href="{{ url_for('paiement', group_id=g.id) }}">{{ t('groups.pay_now') }}</a>
+          </div>
+        </div>
+      {% else %}
+        <div class="group-card"><div class="group-title">{{ t('groups.no_groups_joined') }}</div><div class="group-desc">{{ t('groups.join_above') }}</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

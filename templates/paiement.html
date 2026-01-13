@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  .form-sections{display:flex;flex-direction:column;gap:12px}
+  .form-section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px}
+  .form-section h3{margin:0 0 8px;color:var(--blue)}
+  .inline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .inline .chip{background:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 10px;cursor:pointer}
+  .inline .chip:hover{filter:brightness(1.02)}
+  .secure-note{color:var(--muted);font-size:.95rem}
+</style>
+{% endblock %}
+{% block content %}
+<div class="grid">
+  <div class="card pay-card">
+    <h2>{{ t('payment.title') }}</h2>
+    <div class="form-sections">
+      <form method="post" class="form" id="payForm">
+        <div class="form-section">
+          <h3>{{ t('payment.choose_group') }}</h3>
+          <div class="inline">
+            <select name="group_id" class="input" id="groupSelect" required style="max-width:340px">
+              {% for g in groups %}
+                <option value="{{ g.id }}" {% if selected_group and selected_group.id == g.id %}selected{% endif %}>{{ g.name }}</option>
+              {% endfor %}
+            </select>
+            <span class="chip">{{ t('payment.balance') }}: <strong id="groupBalance">{{ balances[selected_group.id] if selected_group else (balances[groups[0].id] if groups else 0) }}</strong> MAD</span>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>{{ t('payment.amount_to_pay') }}</h3>
+          <div class="inline">
+            <input type="number" name="montant" class="input" id="montant" min="10" value="10" required style="max-width:220px">
+            <div class="quick-amounts">
+              <span class="chip" data-val="10">10</span>
+              <span class="chip" data-val="20">20</span>
+              <span class="chip" data-val="50">50</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>{{ t('payment.payment_method') }}</h3>
+          <div class="pay-modes">
+            <label class="pay-mode" id="modeCarte">
+              <input type="radio" name="mode_paiement" value="carte" required style="display:none">
+              <span class="icon"><svg><use href="#icon-credit-card"></use></svg></span>
+              <div>
+                <div>{{ t('payment.credit_card') }}</div>
+                <div style="color:var(--muted)">{{ t('payment.simulation') }}</div>
+              </div>
+            </label>
+            <label class="pay-mode" id="modePaypal">
+              <input type="radio" name="mode_paiement" value="paypal" required style="display:none">
+              <span class="icon"><svg><use href="#icon-currency"></use></svg></span>
+              <div>
+                <div>{{ t('payment.paypal') }}</div>
+                <div style="color:var(--muted)">{{ t('payment.simulation') }}</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>{{ t('payment.confirmation') }}</h3>
+          <button type="submit" class="btn btn-primary btn-form" id="btnConfirm">{{ t('payment.confirm_payment') }}</button>
+          <div class="secure-note">{{ t('payment.secure_payment') }}</div>
+        </div>
+      </form>
+      <div id="feedback"></div>
+    </div>
+  </div>
+</div>
+<div class="loader-overlay" id="loader"><div class="loader"></div></div>
+<script>
+  const form = document.getElementById('payForm');
+  const groupSel = document.getElementById('groupSelect');
+  const balSpan = document.getElementById('groupBalance');
+  const montant = document.getElementById('montant');
+  const modeCarte = document.getElementById('modeCarte');
+  const modePaypal = document.getElementById('modePaypal');
+  
+  const btnConfirm = document.getElementById('btnConfirm');
+  const fb = document.getElementById('feedback');
+  const loader = document.getElementById('loader');
+  const balances = {{ balances|tojson }};
+  document.querySelectorAll('.quick-amounts .chip').forEach(c=>{ c.addEventListener('click', function(){ montant.value = this.getAttribute('data-val'); validate(); }); });
+  function updateBalance(){
+    const gid = groupSel && groupSel.value;
+    const val = gid ? (balances[gid]||0) : 0;
+    if(balSpan){ balSpan.textContent = String(val); }
+  }
+  function validate(){
+    const v = parseInt(montant.value||'0');
+    const okAmt = !isNaN(v) && v >= 10;
+    const okGroup = !!(groupSel && groupSel.value);
+    const selectedMode = document.querySelector('input[name="mode_paiement"]:checked');
+    const okMode = !!selectedMode;
+    
+    // Enable button if amount, group, and payment mode are valid
+    btnConfirm.disabled = !(okAmt && okGroup && okMode);
+    
+    if(okAmt) {
+      fb.textContent = '';
+    } else {
+      fb.textContent = '{{ t("payment.min_amount_error") }}';
+    }
+    
+    // Show error if no payment method selected
+    if(okAmt && okGroup && !okMode) {
+      fb.textContent = '{{ t("payment.select_payment_method") }}';
+    }
+  }
+  // Handle radio button changes
+  document.querySelectorAll('input[name="mode_paiement"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      // Update visual selection
+      document.querySelectorAll('.pay-mode').forEach(mode => mode.classList.remove('selected'));
+      this.closest('.pay-mode').classList.add('selected');
+      fb.textContent = '';
+      validate();
+    });
+  });
+  
+  montant.addEventListener('input', validate);
+  if(groupSel){ groupSel.addEventListener('change', function(){ updateBalance(); validate(); }); }
+  updateBalance();
+  validate();
+  form.addEventListener('submit', function(e){
+    const v = parseInt(montant.value||'0');
+    const okGroup = !!(groupSel && groupSel.value);
+    const selectedMode = document.querySelector('input[name="mode_paiement"]:checked');
+    
+    if(!okGroup){ 
+      fb.textContent = '{{ t("payment.select_group") }}'; 
+      e.preventDefault(); 
+      return; 
+    }
+    if(isNaN(v) || v < 10){ 
+      fb.textContent = '{{ t("payment.min_amount_error") }}'; 
+      e.preventDefault(); 
+      return; 
+    }
+    if(!selectedMode){ 
+      fb.textContent = '{{ t("payment.select_payment_method") }}'; 
+      e.preventDefault(); 
+      return; 
+    }
+    
+    // Log the payment attempt
+    console.log('Processing payment for group:', groupSel.value, 'amount:', v, 'mode:', selectedMode.value);
+    
+    // Display simulated payment message
+    const modeText = selectedMode.value === 'carte' ? '{{ t("payment.stripe") }}' : '{{ t("payment.paypal") }}';
+    fb.textContent = `{{ t("payment.simulated_payment_via") }} ${modeText}`;
+    btnConfirm.disabled = true;
+    if(loader){ loader.style.display='flex'; }
+    
+    // Allow form to submit normally to backend
+  });
+</script>
+{% endblock %}

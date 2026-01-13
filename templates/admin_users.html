@@ -1,0 +1,458 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  .users-wrap{display:flex;flex-direction:column;gap:10px}
+  .bulk-bar{display:none;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px}
+  .bulk-left{font-weight:600}
+  .bulk-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .dropdown{position:relative;display:inline-block}
+  .dropdown-btn{padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer}
+  .dropdown-menu{position:absolute;top:110%;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;min-width:200px;box-shadow:0 10px 20px rgba(0,0,0,.08);display:none;z-index:10}
+  .dropdown.open .dropdown-menu{display:block}
+  .dropdown-menu .item{display:flex;align-items:center;gap:8px;padding:8px 10px;color:var(--dark);cursor:pointer;text-decoration:none}
+  .dropdown-menu .item:hover{background:#f1f5f9}
+  .dropdown-menu .item.disabled{opacity:.5;cursor:not-allowed}
+  .dropdown-menu .item-danger{color:#b91c1c}
+  .dropdown-menu .item-warn{color:#9a3412}
+  .dropdown-menu .item-primary{color:#1e3a8a}
+  
+  .btn-bulk-block {
+    background-color: #3b82f6 !important; /* blue */
+    border: 1px solid #2563eb !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-bulk-block:hover {
+    background-color: #2563eb !important;
+  }
+  
+  .btn-bulk-unblock {
+    background-color: #10b981 !important; /* green */
+    border: 1px solid #059669 !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-bulk-unblock:hover {
+    background-color: #059669 !important;
+  }
+  
+  .btn-bulk-promote {
+    background-color: #f59e0b !important; /* orange */
+    border: 1px solid #d97706 !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-bulk-promote:hover {
+    background-color: #d97706 !important;
+  }
+  
+  .btn-bulk-demote {
+    background-color: #6b7280 !important; /* gray */
+    border: 1px solid #4b5563 !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-bulk-demote:hover {
+    background-color: #4b5563 !important;
+  }
+  
+  .btn-bulk-delete {
+    background-color: #ef4444 !important; /* red */
+    border: 1px solid #dc2626 !important;
+    color: white !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-bulk-delete:hover {
+    background-color: #dc2626 !important;
+  }
+  
+  /* Admin Page Buttons Light/See-Through Style */
+  .btn-see-through {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-see-through::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-see-through:hover::before {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  .btn-bulk-block {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-bulk-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(59, 130, 246, 0.2); /* light blue */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-bulk-block:hover::before {
+    background-color: rgba(37, 99, 235, 0.3); /* darker blue */
+  }
+  
+  .btn-bulk-unblock {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-bulk-unblock::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(16, 185, 129, 0.2); /* light green */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-bulk-unblock:hover::before {
+    background-color: rgba(5, 150, 105, 0.3); /* darker green */
+  }
+  
+  .btn-bulk-promote {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-bulk-promote::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(245, 158, 11, 0.2); /* light orange */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-bulk-promote:hover::before {
+    background-color: rgba(217, 119, 6, 0.3); /* darker orange */
+  }
+  
+  .btn-bulk-demote {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-bulk-demote::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(107, 114, 128, 0.2); /* light gray */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-bulk-demote:hover::before {
+    background-color: rgba(75, 85, 99, 0.3); /* darker gray */
+  }
+  
+  .btn-bulk-delete {
+    background-color: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333333 !important;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-bulk-delete::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(239, 68, 68, 0.2); /* light red */
+    border-radius: 8px;
+    z-index: -1;
+    backdrop-filter: blur(4px);
+  }
+  
+  .btn-bulk-delete:hover::before {
+    background-color: rgba(220, 38, 38, 0.3); /* darker red */
+  }
+  
+  .dropdown-menu .item-block {
+    background-color: #3b82f6;
+    border: 1px solid #2563eb;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .dropdown-menu .item-block:hover {
+    background-color: #2563eb;
+  }
+  
+  .dropdown-menu .item-unblock {
+    background-color: #10b981;
+    border: 1px solid #059669;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .dropdown-menu .item-unblock:hover {
+    background-color: #059669;
+  }
+  
+  .dropdown-menu .item-promote {
+    background-color: #f59e0b;
+    border: 1px solid #d97706;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .dropdown-menu .item-promote:hover {
+    background-color: #d97706;
+  }
+  
+  .dropdown-menu .item-demote {
+    background-color: #6b7280;
+    border: 1px solid #4b5563;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .dropdown-menu .item-demote:hover {
+    background-color: #4b5563;
+  }
+  
+  .dropdown-menu .item-delete {
+    background-color: #ef4444;
+    border: 1px solid #dc2626;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .dropdown-menu .item-delete:hover {
+    background-color: #dc2626;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="card users-wrap">
+  <h2>Utilisateurs</h2>
+  <div id="bulkBar" class="bulk-bar">
+    <div class="bulk-left"><span id="bulkCount">0</span> utilisateurs sélectionnés</div>
+    <div class="bulk-actions">
+      <button class="btn btn-bulk-block" id="bulkBlock">Bloquer sélection</button>
+      <button class="btn btn-bulk-unblock" id="bulkUnblock">Débloquer sélection</button>
+      <button class="btn btn-bulk-promote" id="bulkPromote">Promouvoir admins</button>
+      <button class="btn btn-bulk-demote" id="bulkDemote">Rétrograder users</button>
+      <button class="btn btn-bulk-delete" id="bulkDelete" disabled title="Suppression indisponible">Supprimer sélection</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+  <table class="table compact" id="usersTable">
+    <thead>
+      <tr>
+        <th class="checkbox-col"><input type="checkbox" id="chkAll" class="row-check"></th>
+        <th class="col-name">Nom</th>
+        <th class="col-email">Email</th>
+        <th class="col-role col-center">Rôle</th>
+        <th class="col-status col-center">Statut</th>
+        <th class="col-actions col-center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr data-user-id="{{ u.id }}" data-role="{{ u.role }}" data-blocked="{{ 1 if u.is_blocked else 0 }}"
+          data-url-block="{{ url_for('admin_user_block', id=u.id) }}"
+          data-url-unblock="{{ url_for('admin_user_unblock', id=u.id) }}"
+          data-url-make-admin="{{ url_for('admin_user_make_admin', id=u.id) }}"
+          data-url-make-user="{{ url_for('admin_user_make_user', id=u.id) }}"
+          data-url-delete="{{ url_for('admin_user_delete', id=u.id) }}"
+          data-url-detail="{{ url_for('admin_user_detail', id=u.id) }}">
+        <td class="checkbox-col"><input type="checkbox" class="row-check"></td>
+        <td class="col-name">{{ u.name }}</td>
+        <td class="col-email">{{ u.email }}</td>
+        <td class="col-center">
+          {% if u.role == 'admin' %}
+            <span class="role-badge admin">admin</span>
+          {% else %}
+            <span class="role-badge user">user</span>
+          {% endif %}
+        </td>
+        <td class="col-center">
+          {% if u.is_blocked %}
+            <span class="state-badge blocked">bloqué</span>
+          {% else %}
+            <span class="state-badge active">actif</span>
+          {% endif %}
+        </td>
+        <td class="col-actions col-center">
+          <div class="dropdown">
+            <button class="dropdown-btn" title="Actions">⋮</button>
+            <div class="dropdown-menu">
+              <a class="item" href="{{ url_for('admin_user_detail', id=u.id) }}">👤 Voir profil</a>
+              {% if not u.is_blocked %}
+                <form method="post" action="{{ url_for('admin_user_block', id=u.id) }}" onsubmit="return confirm('Bloquer {{ u.name }} ?')">
+                  <button type="submit" class="item item-block">🔒 Bloquer</button>
+                </form>
+              {% else %}
+                <form method="post" action="{{ url_for('admin_user_unblock', id=u.id) }}" onsubmit="return confirm('Débloquer {{ u.name }} ?')">
+                  <button type="submit" class="item item-unblock">🔓 Débloquer</button>
+                </form>
+              {% endif %}
+              {% if u.role != 'admin' %}
+                <form method="post" action="{{ url_for('admin_user_make_admin', id=u.id) }}" onsubmit="return confirm('Promouvoir {{ u.name }} en admin ?')">
+                  <button type="submit" class="item item-promote">⭐ Promouvoir admin</button>
+                </form>
+              {% endif %}
+              {% if u.role == 'admin' %}
+                <form method="post" action="{{ url_for('admin_user_make_user', id=u.id) }}" onsubmit="return confirm('Rétrograder {{ u.name }} en user ?')">
+                  <button type="submit" class="item item-demote">⬇️ Rétrograder user</button>
+                </form>
+              {% endif %}
+              <button type="button" class="item item-delete js-delete">🗑 Supprimer</button>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">Aucun utilisateur</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+<script>
+  (function(){
+    var chkAll = document.getElementById('chkAll');
+    var bulkBar = document.getElementById('bulkBar');
+    var bulkCount = document.getElementById('bulkCount');
+    function rows(){ return Array.from(document.querySelectorAll('#usersTable tbody tr')); }
+    function selected(){ return rows().filter(function(r){ return r.querySelector('.row-check').checked; }); }
+    function updateBulk(){
+      var sel = selected();
+      var all = rows();
+      bulkCount.textContent = String(sel.length);
+      bulkBar.style.display = sel.length ? 'flex' : 'none';
+      if(chkAll){ chkAll.checked = sel.length === all.length && all.length > 0; }
+    }
+    if(chkAll){ chkAll.addEventListener('change', function(){ rows().forEach(function(r){ var c=r.querySelector('.row-check'); if(c) c.checked = chkAll.checked; }); updateBulk(); }); }
+    rows().forEach(function(r){
+      var c=r.querySelector('.row-check'); if(c){ c.addEventListener('change', updateBulk); }
+      var dd=r.querySelector('.dropdown'); if(dd){ var btn=dd.querySelector('.dropdown-btn'); btn.addEventListener('click', function(e){ e.stopPropagation(); dd.classList.toggle('open'); }); document.addEventListener('click', function(){ dd.classList.remove('open'); }); }
+      var del=r.querySelector('.js-delete'); if(del){ del.addEventListener('click', function(){ if(!confirm('Supprimer cet utilisateur ?')) return; fetch(r.dataset.urlDelete, {method:'DELETE'}).then(function(resp){ if(!resp.ok){ return resp.json().then(function(j){ alert(j.error||'Erreur suppression'); }); } else { location.reload(); } }); }); }
+    });
+    function post(url){ return fetch(url, {method:'POST'}); }
+    function confirmRun(msg, fn){ if(!confirm(msg)) return; fn(); }
+    document.getElementById('bulkBlock').addEventListener('click', function(){ confirmRun('Bloquer les utilisateurs sélectionnés ?', function(){
+      var ops = selected().filter(function(r){ return r.dataset.blocked==='0'; }).map(function(r){ return post(r.dataset.urlBlock); }); Promise.all(ops).then(function(){ location.reload(); });
+    }); });
+    document.getElementById('bulkUnblock').addEventListener('click', function(){ confirmRun('Débloquer les utilisateurs sélectionnés ?', function(){
+      var ops = selected().filter(function(r){ return r.dataset.blocked==='1'; }).map(function(r){ return post(r.dataset.urlUnblock); }); Promise.all(ops).then(function(){ location.reload(); });
+    }); });
+    document.getElementById('bulkPromote').addEventListener('click', function(){ confirmRun('Promouvoir en admin les utilisateurs sélectionnés ?', function(){
+      var ops = selected().filter(function(r){ return r.dataset.role==='user'; }).map(function(r){ return post(r.dataset.urlMakeAdmin); }); Promise.all(ops).then(function(){ location.reload(); });
+    }); });
+    document.getElementById('bulkDemote').addEventListener('click', function(){ confirmRun('Rétrograder en user les admins sélectionnés ?', function(){
+      var ops = selected().filter(function(r){ return r.dataset.role==='admin'; }).map(function(r){ return post(r.dataset.urlMakeUser); }); Promise.all(ops).then(function(){ location.reload(); });
+    }); });
+  })();
+</script>
+{% endblock %}

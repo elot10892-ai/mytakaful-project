@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  /* Fixed size square with centered logo */
+  .hero .hero-illustration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    margin-top: 20px;
+    background: radial-gradient(circle at 30% 30%, rgba(30,58,138,.15), transparent 60%), radial-gradient(circle at 70% 70%, rgba(6,95,70,.15), transparent 60%);
+    border-radius: 24px;
+  }
+  
+  .hero .hero-logo {
+    width: 48px;
+    height: 48px;
+    fill: currentColor;
+    color: var(--blue);
+  }
+</style>
+{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-inner">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg class="brand-icon" role="img" aria-label="{{ t('home.logo_alt') }}"><use href="#icon-handshake"></use></svg>
+        <h1>MyTakaful</h1>
+      </div>
+      <p>{{ t('home.description') }}</p>
+    </div>
+    <div class="cta">
+      <a class="btn btn-primary" href="{{ url_for('login') }}">{{ t('navigation.login') }}</a>
+      <a class="btn btn-secondary" href="{{ url_for('register') }}">{{ t('navigation.register') }}</a>
+    </div>
+  </div>
+  <div class="hero-illustration">
+      <svg class="hero-logo" role="img" aria-label="Logo MyTakaful"><use href="#icon-handshake"></use></svg>
+    </div>
+  </section>
+
+<section id="about" class="section fade">
+  <div class="container">
+    <h2>{{ t('navigation.about') }}</h2>
+    <p>{{ t('home.about_description') }}</p>
+  </div>
+</section>
+
+<section id="features" class="section fade">
+  <div class="container">
+    <h2>{{ t('navigation.features') }}</h2>
+    <div class="grid">
+      <div class="card feature"><div class="icon">💳</div><h3>{{ t('home.features.auto_contributions') }}</h3><p>{{ t('home.features.auto_contributions_desc') }}</p></div>
+      <div class="card feature"><div class="icon">⚖️</div><h3>{{ t('home.features.fair_distribution') }}</h3><p>{{ t('home.features.fair_distribution_desc') }}</p></div>
+      <div class="card feature"><div class="icon">📜</div><h3>{{ t('home.features.transparent_history') }}</h3><p>{{ t('home.features.transparent_history_desc') }}</p></div>
+      <div class="card feature"><div class="icon">🔔</div><h3>{{ t('home.features.real_time_notifications') }}</h3><p>{{ t('home.features.real_time_notifications_desc') }}</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how" class="section fade">
+  <div class="container">
+    <h2>{{ t('navigation.how_it_works') }}</h2>
+    <div class="grid steps">
+      <div class="card step"><div class="step-num">1</div><h3>{{ t('home.how.step1_title') }}</h3><p>{{ t('home.how.step1_desc') }}</p></div>
+      <div class="card step"><div class="step-num">2</div><h3>{{ t('home.how.step2_title') }}</h3><p>{{ t('home.how.step2_desc') }}</p></div>
+      <div class="card step"><div class="step-num">3</div><h3>{{ t('home.how.step3_title') }}</h3><p>{{ t('home.how.step3_desc') }}</p></div>
+      <div class="card step"><div class="step-num">4</div><h3>{{ t('home.how.step4_title') }}</h3><p>{{ t('home.how.step4_desc') }}</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="testimonials" class="section fade">
+  <div class="container">
+    <h2>{{ t('home.testimonials') }}</h2>
+    <div class="grid">
+      <div class="card testimonial"><p>{{ t('home.testimonial1') }}</p><span>— Karim</span></div>
+      <div class="card testimonial"><p>{{ t('home.testimonial2') }}</p><span>— Salma</span></div>
+      <div class="card testimonial"><p>{{ t('home.testimonial3') }}</p><span>— Youssef</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="section fade">
+  <div class="container">
+    <h2>{{ t('home.faq') }}</h2>
+    <div class="faq">
+      <div class="faq-item"><button class="faq-q">{{ t('home.faq_question1') }}</button><div class="faq-a">{{ t('home.faq_answer1') }}</div></div>
+      <div class="faq-item"><button class="faq-q">{{ t('home.faq_question2') }}</button><div class="faq-a">{{ t('home.faq_answer2') }}</div></div>
+      <div class="faq-item"><button class="faq-q">{{ t('home.faq_question3') }}</button><div class="faq-a">{{ t('home.faq_answer3') }}</div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="links">
+      <a href="#">{{ t('home.footer.contact') }}</a>
+      <a href="#">{{ t('home.footer.legal') }}</a>
+      <a href="#">{{ t('home.footer.social') }}</a>
+    </div>
+    <div class="copy">© {{ (now() if false) or '' }} MyTakaful — {{ t('home.footer.copyright') }}</div>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.faq-q').forEach(btn=>{
+    btn.addEventListener('click',()=>{ btn.parentElement.classList.toggle('open'); });
+  });
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+  }, {threshold: 0.15});
+  document.querySelectorAll('.fade').forEach(el=>io.observe(el));
+</script>
+{% endblock %}

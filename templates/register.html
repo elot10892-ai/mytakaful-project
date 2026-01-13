@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card card">
+    <h2 class="auth-title">{{ t('register.title') }}</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="form-msg error">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    <form method="post" class="form">
+      <label>{{ t('register.name') }}</label>
+      <input type="text" name="name" class="input" placeholder="{{ t('register.name') }}" required>
+      <label>{{ t('register.email') }}</label>
+      <input type="email" name="email" class="input" placeholder="{{ t('register.email') }}" required>
+      <label>{{ t('register.password') }}</label>
+      <input type="password" name="password" class="input" placeholder="{{ t('register.password') }}" required>
+      <label>{{ t('register.confirm_password') }}</label>
+      <input type="password" name="password_confirm" class="input" placeholder="{{ t('register.confirm_password') }}" required>
+      <div class="auth-actions">
+        <button type="submit" class="btn btn-secondary btn-form">{{ t('register.register_button') }}</button>
+      </div>
+    </form>
+    <div class="auth-footer">
+      <p>{{ t('register.already_have_account') }} <a href="{{ url_for('login') }}">{{ t('register.login') }}</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

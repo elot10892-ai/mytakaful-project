@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Créer un groupe</h1>
+<form method="post">
+  <label>Nom</label>
+  <input type="text" name="name" required>
+  <label>Description</label>
+  <textarea name="description"></textarea>
+  <p>Cotisation mensuelle: 10 MAD (fixe)</p>
+  <button type="submit" class="btn btn-primary">Créer</button>
+  <a href="{{ url_for('dashboard') }}" class="btn btn-neutral">Annuler</a>
+{% endblock %}

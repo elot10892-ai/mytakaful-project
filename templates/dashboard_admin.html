@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+  .actions {
+    margin-bottom: 16px;
+  }
+  
+  .table-wrap {
+    margin-top: 0;
+  }
+  
+  /* Optimize spacing for funds by group section */
+  .card > h3 {
+    margin: 0 0 4px 0;
+  }
+  
+  .chart-wrap {
+    margin: 0 !important;
+    padding: 0;
+    min-height: auto;
+    height: 120px; /* Reduced height for compact display */
+  }
+  
+  canvas {
+    max-height: 100px !important;
+    height: 100px !important;
+  }
+  
+  /* Compact card styling */
+  .card {
+    padding: 8px !important;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .card > h3 {
+    margin: 0 0 4px 0;
+    padding: 0 0 2px 0;
+  }
+  
+  /* Light See-Through Stats Cards */
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 12px;
+    color: #374151;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(209, 213, 219, 0.5);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  .stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    border-color: rgba(156, 163, 175, 0.5);
+  }
+  
+  .stat.blue {
+    background-color: rgba(37, 99, 235, 0.15); /* Light blue for Utilisateurs */
+  }
+  
+  .stat.green {
+    background-color: rgba(124, 58, 237, 0.15); /* Light violet for Groupes */
+  }
+  
+  .stat.yellow {
+    background-color: rgba(22, 163, 74, 0.15); /* Light green for Transactions */
+  }
+  
+  .stat.purple {
+    background-color: rgba(245, 158, 11, 0.15); /* Light orange for Fonds globaux */
+  }
+  
+  .stat.cyan {
+    background-color: rgba(34, 197, 94, 0.15); /* Light green for Membres actifs */
+  }
+  
+  .stat.orange {
+    background-color: rgba(220, 38, 38, 0.15); /* Light red for Aides en attente */
+  }
+  
+  .stat.dkgreen {
+    background-color: rgba(59, 130, 246, 0.15); /* Light blue for Revenus mensuels */
+  }
+  
+  .stat-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+  
+  .stat-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  /* Light See-Through Action Buttons */
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .btn-light-users {
+    background-color: rgba(37, 99, 235, 0.15);
+    color: #1d4ed8;
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-light-users:hover {
+    background-color: rgba(29, 78, 216, 0.25);
+    border-color: rgba(29, 78, 216, 0.5);
+  }
+  
+  .btn-light-groups {
+    background-color: rgba(124, 58, 237, 0.15);
+    color: #6d2bd1;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-light-groups:hover {
+    background-color: rgba(109, 43, 209, 0.25);
+    border-color: rgba(109, 43, 209, 0.5);
+  }
+  
+  .btn-light-export {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+  }
+  
+  .btn-light-export:hover {
+    background-color: rgba(217, 119, 6, 0.25);
+    border-color: rgba(217, 119, 6, 0.5);
+  }
+  
+  /* Admin Sidebar Styles */
+  .sidebar {
+    background-color: rgba(249, 250, 251, 0.9); /* light gray-white semi-transparent */
+    border-right: 1px solid rgba(229, 231, 235, 0.5); /* subtle border */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05); /* subtle shadow */
+    border-radius: 0;
+    transition: all 0.3s ease;
+  }
+  
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+  }
+  
+  .sidebar nav a {
+    padding: 10px 16px;
+    margin: 4px 8px;
+    border-radius: 8px; /* slightly rounded corners */
+    color: #374151; /* readable text color */
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: block;
+  }
+  
+  .sidebar nav a:hover {
+    background-color: rgba(209, 213, 219, 0.3); /* slightly darker background on hover */
+    color: #1f2937; /* slightly darker text on hover */
+  }
+  
+  .sidebar.collapsed {
+    width: 60px;
+  }
+  
+  .sidebar.collapsed nav a {
+    text-align: center;
+    padding: 12px 5px;
+    font-size: 0;
+  }
+  
+  .sidebar.collapsed nav a::first-letter {
+    font-size: 16px;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="grid">
+  <div class="card"><h2>Admin Dashboard</h2>
+    <div class="stats">
+      <div class="stat blue">
+        <span class="stat-icon">👥</span>
+        <div class="stat-label">Utilisateurs</div>
+        <div class="stat-value">{{ user_count }}</div>
+      </div>
+      <div class="stat green">
+        <span class="stat-icon">🧩</span>
+        <div class="stat-label">Groupes</div>
+        <div class="stat-value">{{ group_count }}</div>
+      </div>
+      <div class="stat yellow">
+        <span class="stat-icon">🔁</span>
+        <div class="stat-label">Transactions</div>
+        <div class="stat-value">{{ tx_count }}</div>
+      </div>
+      <div class="stat purple">
+        <span class="stat-icon">💰</span>
+        <div class="stat-label">Fonds globaux (MAD)</div>
+        <div class="stat-value">{{ total_funds }}</div>
+      </div>
+      <div class="stat cyan">
+        <span class="stat-icon">✅</span>
+        <div class="stat-label">Membres actifs</div>
+        <div class="stat-value">{{ active_members }}</div>
+      </div>
+      <div class="stat orange">
+        <span class="stat-icon">⚠️</span>
+        <div class="stat-label">Aides en attente</div>
+        <div class="stat-value">{{ pending_aids }}</div>
+      </div>
+      <div class="stat dkgreen">
+        <span class="stat-icon">📈</span>
+        <div class="stat-label">Revenus mensuels (MAD)</div>
+        <div class="stat-value">{{ monthly_revenue }}</div>
+      </div>
+    </div>
+    <div class="actions">
+      <a href="{{ url_for('admin_users') }}" class="btn btn-light-users">👥 Utilisateurs</a>
+      <a href="{{ url_for('admin_groups') }}" class="btn btn-light-groups">🧩 Groupes</a>
+      <a href="{{ url_for('export_csv') }}" class="btn btn-light-export">📊 Export CSV</a>
+      <a href="{{ url_for('export_pdf') }}" class="btn btn-light-export">📄 Export PDF</a>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Filtres</h3>
+    <form method="get" action="{{ url_for('admin') }}" class="form">
+      <label>Groupe</label>
+      <select name="group_id" class="input" style="max-width:320px">
+        <option value="">Tous</option>
+        {% for g in groups_list %}
+          <option value="{{ g.id }}" {% if selected_group_id and selected_group_id|int == g.id %}selected{% endif %}>{{ g.name }}</option>
+        {% endfor %}
+      </select>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <div>
+          <label>Date début</label>
+          <input type="date" name="start" value="{{ start_date }}" class="input" style="max-width:200px">
+        </div>
+        <div>
+          <label>Date fin</label>
+          <input type="date" name="end" value="{{ end_date }}" class="input" style="max-width:200px">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="margin-top:10px">Appliquer</button>
+    </form>
+  </div>
+  <div class="card">
+    <h3>Fonds par groupe</h3>
+    <div class="chart-wrap"><canvas id="adminChart"></canvas></div>
+  </div>
+  <div class="card" id="aids">
+    <h3>Demandes d’aide par statut</h3>
+    <div class="chart-wrap"><canvas id="aidStatusChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>Revenus mensuels</h3>
+    <div class="chart-wrap"><canvas id="monthlyRevenueChart"></canvas></div>
+  </div>
+  <div class="card" id="transactions">
+    <h3>Transactions récentes</h3>
+    <input type="text" id="txFilter" placeholder="Filtrer..." class="input">
+    <div class="table-wrap">
+    <table class="table" id="txTable">
+      <thead><tr><th class="col-id col-right">#</th><th class="col-date">Date</th><th>Utilisateur</th><th>Groupe</th><th class="col-right">Montant</th><th>Mode</th><th class="col-status col-center">Statut</th><th class="col-actions col-center">Actions</th></tr></thead>
+      <tbody>
+        {% for transaction in transactions or [] %}
+          <tr>
+            <td class="col-right">{{ transaction.id }}</td><td>{{ transaction.date.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ transaction.user.name }}</td><td>{{ transaction.group.name }}</td><td class="col-right">{{ transaction.amount }}</td>
+            <td>{{ 'Carte bancaire' if transaction.provider == 'stripe' else ('PayPal' if transaction.provider == 'paypal' else 'Compte interne') }}</td>
+            <td class="col-center"><span class="status-badge {{ transaction.status }}">{{ transaction.status }}</span></td>
+            <td class="col-actions col-center">
+              <form method="post" action="{{ url_for('approve_transaction', tx_id=transaction.id) }}" style="display:inline"><button type="submit" class="btn btn-primary btn-compact btn-icon-only" title="{{ t('admin.transactions.approve') }}"><span class="icon"><svg><use href="#icon-check"></use></svg></span></button></form>
+              <form method="post" action="{{ url_for('reject_transaction', tx_id=transaction.id) }}" style="display:inline"><button type="submit" class="btn btn-danger btn-compact btn-icon-only" title="{{ t('admin.transactions.reject') }}"><span class="icon"><svg><use href="#icon-x"></use></svg></span></button></form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8">Aucune transaction</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  <div class="card" id="cotisations">
+    <h3>Cotisations</h3>
+    <div class="actions">
+      <a class="btn btn-primary" href="{{ url_for('export_cotisations_csv', group_id=selected_group_id, start=start_date, end=end_date) }}">Export CSV</a>
+      <a class="btn btn-secondary" href="{{ url_for('export_cotisations_pdf', group_id=selected_group_id, start=start_date, end=end_date) }}">Export PDF</a>
+    </div>
+    <div class="table-wrap">
+    <table class="table compact">
+      <thead><tr><th class="col-date">Date</th><th class="col-right">Montant</th><th>Membre</th><th>Groupe</th></tr></thead>
+      <tbody>
+        {% for t in cotisations %}
+        <tr><td>{{ t.date }}</td><td class="col-right">{{ t.amount }}</td><td>{{ t.user.name }}</td><td>{{ t.group.name }}</td></tr>
+        {% else %}
+        <tr><td colspan="4">Aucune cotisation</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  <div class="card" id="aides-list">
+    <h3>Aides</h3>
+    <div class="actions">
+      <a class="btn btn-primary" href="{{ url_for('export_aides_csv', group_id=selected_group_id, start=start_date, end=end_date) }}">Export CSV</a>
+      <a class="btn btn-secondary" href="{{ url_for('export_aides_pdf', group_id=selected_group_id, start=start_date, end=end_date) }}">Export PDF</a>
+    </div>
+    <div class="table-wrap">
+    <table class="table compact">
+      <thead><tr><th class="col-date">Date</th><th>Membre</th><th>Groupe</th><th class="col-right">Montant</th><th>Motif</th><th class="col-status col-center">Statut</th><th class="col-actions col-center">Actions</th></tr></thead>
+      <tbody>
+        {% for aid in aides %}
+        <tr>
+          <td>{{ aid.date.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ aid.user.name }}</td>
+          <td>{{ aid.group.name }}</td>
+          <td class="col-right">{{ aid.amount }}</td>
+          <td>{{ aid.reason or '—' }}</td>
+          <td class="col-center"><span class="status-badge {{ aid.status }}">{{ aid.status }}</span></td>
+          <td class="col-actions col-center">
+            <form method="post" action="{{ url_for('approve_aid', aid_id=aid.id) }}" style="display:inline"><button type="submit" class="btn btn-primary btn-compact btn-icon-only" title="{{ t('admin.aids.approve') }}"><span class="icon"><svg><use href="#icon-check"></use></svg></span></button></form>
+            <form method="post" action="{{ url_for('reject_aid', aid_id=aid.id) }}" style="display:inline"><button type="submit" class="btn btn-danger btn-compact btn-icon-only" title="{{ t('admin.aids.reject') }}"><span class="icon"><svg><use href="#icon-x"></use></svg></span></button></form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7">Aucune aide</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Notifications</h3>
+    <div class="notif-list" role="list">
+      {% for n in notifications %}
+        <div class="notif-item" role="listitem">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div style="display:flex;align-items:center;gap:10px">
+              {% set ico = '🔔' %}
+              {% if n.type == 'contribution_due' %}{% set ico = '⚠️' %}
+              {% elif n.type == 'contribution_paid' %}{% set ico = '✅' %}
+              {% elif n.type in ['tx_approved', 'aid_approved'] %}{% set ico = '💰' %}
+              {% elif n.type == 'group_join' %}{% set ico = '👤' %}
+              {% elif n.type == 'group_created' %}{% set ico = '🆕' %}
+              {% elif n.type == 'aid_request' %}{% set ico = '🆘' %}
+              {% elif n.type == 'group_leave' %}{% set ico = '↩️' %}
+              {% endif %}
+              <span class="n-badge">{{ ico }}</span>
+              <div class="notif-content">
+                <div class="message">{{ n.message }}</div>
+                <div class="meta">{{ n.date.strftime('%Y-%m-%d %H:%M') }}</div>
+              </div>
+            </div>
+            {% if n.group %}
+              <span class="group-tag">{{ n.group.name }}</span>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="notif-item"><div class="message">Aucune notification</div></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const labels = {{ chart_labels|default([])|tojson }};
+  const values = {{ chart_values|default([])|tojson }};
+  new Chart(document.getElementById('adminChart'), {type:'bar', data:{labels, datasets:[{label:'Fonds par groupe (MAD)', data:values, backgroundColor:'rgba(30,58,138,0.6)', borderColor:'#1e3a8a'}]}});
+  const aidCounts = {{ aid_status_counts|default({})|tojson }};
+  new Chart(document.getElementById('aidStatusChart'), {type:'doughnut', data:{labels:Object.keys(aidCounts), datasets:[{data:Object.values(aidCounts), backgroundColor:['#f59e0b','#10b981','#ef4444']} ]}});
+  const revLabels = {{ revenue_labels|default([])|tojson }};
+  const revValues = {{ revenue_values|default([])|tojson }};
+  new Chart(document.getElementById('monthlyRevenueChart'), {type:'line', data:{labels:revLabels, datasets:[{label:'Revenus (MAD)', data:revValues, borderColor:'#065f46', backgroundColor:'rgba(6,95,70,0.2)'}]}});
+  const f = document.getElementById('txFilter');
+  f && f.addEventListener('input', function(){
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#txTable tbody tr').forEach(tr=>{
+      tr.style.display = tr.textContent.toLowerCase().includes(q)?'':'none';
+    });
+  });
+  document.querySelectorAll('#txTable thead th').forEach((th, idx)=>{
+    let asc=true;
+    th.addEventListener('click', ()=>{
+      const rows = Array.from(document.querySelectorAll('#txTable tbody tr'));
+      rows.sort((a,b)=>{
+        const ta = a.children[idx].textContent.trim();
+        const tb = b.children[idx].textContent.trim();
+        if(!isNaN(parseFloat(ta)) && !isNaN(parseFloat(tb))){ return (parseFloat(ta)-parseFloat(tb))*(asc?1:-1); }
+        return ta.localeCompare(tb)*(asc?1:-1);
+      });
+      const tbody = document.querySelector('#txTable tbody');
+      tbody.innerHTML=''; rows.forEach(r=>tbody.appendChild(r)); asc=!asc;
+    });
+  });
+  
+  // Handle form submissions with AJAX for better UX
+  document.querySelectorAll('#txTable form, #aides-list form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const row = this.closest('tr');
+      const action = this.querySelector('button').textContent.trim();
+      
+      fetch(this.action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      }).then(response => {
+        // Remove the row from the table
+        row.remove();
+        
+        // Show success message
+        const msg = action === 'Approuver' ? 
+          'Transaction approuvée avec succès' : 
+          'Transaction refusée avec succès';
+          
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = 'toast-item';
+        toast.textContent = msg;
+        toast.style.background = '#d1fae5';
+        toast.style.color = '#064e3b';
+        toast.style.border = '1px solid #10b981';
+        
+        // Add to toast container or create one
+        let toastContainer = document.querySelector('.toast');
+        if (!toastContainer) {
+          toastContainer = document.createElement('div');
+          toastContainer.className = 'toast';
+          document.body.appendChild(toastContainer);
+        }
+        toastContainer.appendChild(toast);
+        
+        // Remove toast after 3 seconds
+        setTimeout(() => {
+          toast.remove();
+          if (toastContainer.children.length === 0) {
+            toastContainer.remove();
+          }
+        }, 3000);
+      });
+    });
+  });
+</script>
+{% endblock %}
