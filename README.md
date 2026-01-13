@@ -1,0 +1,2 @@
+# mytakaful-project
+Projet Flask
