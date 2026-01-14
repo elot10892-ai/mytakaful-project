@@ -450,36 +450,9 @@
       }).then(response => {
         // Remove the row from the table
         row.remove();
-        
-        // Show success message
-        const msg = action === 'Approuver' ? 
-          'Transaction approuvée avec succès' : 
-          'Transaction refusée avec succès';
-          
-        // Create toast notification
-        const toast = document.createElement('div');
-        toast.className = 'toast-item';
-        toast.textContent = msg;
-        toast.style.background = '#d1fae5';
-        toast.style.color = '#064e3b';
-        toast.style.border = '1px solid #10b981';
-        
-        // Add to toast container or create one
-        let toastContainer = document.querySelector('.toast');
-        if (!toastContainer) {
-          toastContainer = document.createElement('div');
-          toastContainer.className = 'toast';
-          document.body.appendChild(toastContainer);
-        }
-        toastContainer.appendChild(toast);
-        
-        // Remove toast after 3 seconds
-        setTimeout(() => {
-          toast.remove();
-          if (toastContainer.children.length === 0) {
-            toastContainer.remove();
-          }
-        }, 3000);
+              
+        // Silent operation - no messages displayed
+        // Success feedback is implicit by row removal
       });
     });
   });

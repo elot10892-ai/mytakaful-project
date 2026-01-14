@@ -1,5 +1,23 @@
+# Virtual environment
 .venv/
+env/
+venv/
+
+# Python cache
 __pycache__/
-instance/
 *.pyc
-.env
+
+# Database
+*.db
+
+# Instance folder (optionnel selon projet)
+instance/
+
+# IDE / Editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+

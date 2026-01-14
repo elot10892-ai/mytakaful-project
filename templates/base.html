@@ -192,15 +192,8 @@
       </aside>
     {% endif %}
     <main class="content">
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <div class="toast">
-            {% for m in messages %}
-              <div class="toast-item">{{ m }}</div>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
+<!-- Flash Messages disabled - Silent interface -->
+      <!-- <div id="flash-messages"></div> -->
       {% block content %}{% endblock %}
     </main>
   </div>
@@ -253,6 +246,57 @@
       };
     }catch(_){}
     {% endif %}
+    
+    /* Flash messages disabled - silent interface
+    document.addEventListener('DOMContentLoaded', function() {
+      // Process any flashed messages from the backend
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            showFlashMessage("{{ message }}", "{{ category }}");
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    });
+    
+    function showFlashMessage(message, category) {
+      const flashContainer = document.getElementById('flash-messages');
+      
+      // Clear any existing flash messages
+      flashContainer.innerHTML = '';
+      
+      // Create new flash message element
+      const flashElement = document.createElement('div');
+      flashElement.className = 'flash-message';
+      flashElement.textContent = message;
+      
+      // Apply different styling based on category
+      if (category === 'error') {
+        flashElement.classList.add('error');
+      }
+      
+      // Add to container
+      flashContainer.appendChild(flashElement);
+      
+      // Trigger show animation
+      setTimeout(() => {
+        flashElement.classList.add('show');
+      }, 10);
+      
+      // Auto-hide after 1 second with fade-out
+      setTimeout(() => {
+        flashElement.classList.remove('show');
+        flashElement.classList.add('fade-out');
+        
+        // Remove element after fade-out completes
+        setTimeout(() => {
+          if (flashElement.parentNode === flashContainer) {
+            flashContainer.removeChild(flashElement);
+          }
+        }, 300);
+      }, 1000);
+    }
+    */
   </script>
   
   <!-- AI Assistant Floating Button -->

@@ -1573,9 +1573,20 @@ def profile():
 @role_required('admin')
 def delete_group(id):
     gobj = Group.query.get_or_404(id)
-    gobj.archived = True
+    
+    # Delete related transactions
+    Transaction.query.filter_by(group_id=gobj.id).delete()
+    
+    # Delete related memberships
+    Membership.query.filter_by(group_id=gobj.id).delete()
+    
+    # Delete related notifications
+    Notification.query.filter_by(group_id=gobj.id).delete()
+    
+    # Finally delete the group
+    db.session.delete(gobj)
     db.session.commit()
-    flash('Groupe archivé')
+    flash('Groupe supprimé définitivement')
     return redirect(url_for('admin_groups'))
 
 @app.route('/admin/groups/<int:id>/activate', methods=['POST'])
@@ -1613,11 +1624,21 @@ def bulk_group_action():
     groups = Group.query.filter(Group.id.in_(group_ids)).all()
     
     if action == 'delete':
-        # Archive all selected groups
+        # Delete all selected groups permanently
         for group in groups:
-            group.archived = True
+            # Delete related transactions
+            Transaction.query.filter_by(group_id=group.id).delete()
+            
+            # Delete related memberships
+            Membership.query.filter_by(group_id=group.id).delete()
+            
+            # Delete related notifications
+            Notification.query.filter_by(group_id=group.id).delete()
+            
+            # Finally delete the group
+            db.session.delete(group)
         db.session.commit()
-        flash(f'{len(groups)} groupe(s) archivé(s)')
+        flash(f'{len(groups)} groupe(s) supprimé(s) définitivement')
     elif action == 'activate':
         # Activate all selected groups
         for group in groups:
