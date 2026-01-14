@@ -5,6 +5,7 @@ Application MyTakaful (Flask)
 - Exports CSV/PDF, gestion utilisateurs/groupes
 """
 import os
+os.makedirs(os.path.join(os.path.dirname(__file__), "instance"), exist_ok=True)
 from functools import wraps
 import time
 import json
@@ -1781,4 +1782,6 @@ except Exception:
     pass
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Railway fournit le PORT via variable d'environnement
+    app.run(host='0.0.0.0', port=port, debug=True)
+
